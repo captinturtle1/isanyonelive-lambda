@@ -141,10 +141,10 @@ function twitchChannelInfo(channels) {
 }
 
 export const handler = async(event) => {
-    let daResponse = await twitchChannelInfo(event.channels);
+    let data = await twitchChannelInfo(event.channels);
     const response = {
         statusCode: 200,
-        body: daResponse
+        body: data
     };
     return response;
 }

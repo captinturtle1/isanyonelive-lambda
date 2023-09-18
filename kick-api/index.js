@@ -100,7 +100,7 @@ function kickChannelInfo(channels) {
 }
 
 export const handler = async(event) => {
-    let data = await kickChannelInfo(event.channels);
+    let data = await kickChannelInfo(event.body);
     const response = {
         statusCode: 200,
         body: data

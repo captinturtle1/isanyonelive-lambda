@@ -85,7 +85,7 @@ function youtubeChannelInfo(channels) {
 }
 
 export const handler = async(event) => {
-    let data = await youtubeChannelInfo(event.channels);
+    let data = await youtubeChannelInfo(event.body);
     const response = {
         statusCode: 200,
         body: data

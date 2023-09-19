@@ -1,93 +1,40 @@
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-puppeteer.use(StealthPlugin()) 
- 
-function kickChannelInfo(channels) {
+import puppeteer from "puppeteer";
+
+export function kickChannelInfo(channels) {
     return new Promise(async (resolve, reject) => {
         try {
             const browser = await puppeteer.launch({headless: "new"});
             const page = await browser.newPage() 
-            await page.setViewport({width: 1920, height: 919});
             
             async function getStats(channelName, index) {
-                await page.goto(`https://kick.com/${channelName}`);
-                if (await page.waitForSelector('.owner-avatar > div:nth-child(1) > img:nth-child(2)')) {
+                await page.goto(`https://kick.com/api/v2/channels/${channelName}`);
 
-                    const channelStats = await page.evaluate(() => {
-                        let infoObject = {
-                            name: '',
-                            displayName: '',
-                            profileImageURL: '',
-                            streamURL: '',
-                            verified: false,
-                            followers: 0,
-                            live: false,
-                            viewers: 0,
-                            streamTitle: '',
-                            catagory: '',
-                            tags: [],
-                        }
+                // checks if channel exists
+                let extractedText = await page.$eval('*', (el) => el.innerText);
+                if (extractedText.length == 13) return false;
+                extractedText = JSON.parse(extractedText)
 
-                        // getting followers
-                        let followerCount = Array.from(document.querySelector('.shadow > div:nth-child(1) > div:nth-child(1) > div:nth-child(2)').textContent);
-                        let followerNumArray = [];
-                        for (let i = 0; i < followerCount.length; i++) {
-                            if (!isNaN(followerCount[i])) {
-                                followerNumArray.push(followerCount[i]);
-                            }
-                        }
-
-                        infoObject.followers = parseInt(followerNumArray.join(''));
-
-                        // getting displayName
-                        let channelDisplayName = document.querySelector('.stream-username').textContent;
-                        infoObject.displayName = channelDisplayName;
-
-                        // getting verified
-                        let isVerified = document.querySelector('div.w-4:nth-child(2) > div:nth-child(1) > svg:nth-child(1) > path:nth-child(1)') != undefined;
-                        infoObject.verified = isVerified;
-
-                        let profileImageURL = document.querySelector('.owner-avatar > div:nth-child(1) > img:nth-child(2)').getAttribute("src");
-                        infoObject.profileImageURL = profileImageURL;
-
-                        // if live
-                        if (document.querySelector('.mt-0') != undefined) {
-                            infoObject.live = true;
-
-                            // getting catagory
-                            let channelCatagories = document.querySelector('div.category-tags-holder:nth-child(3) > div:nth-child(1) > a:nth-child(1)').textContent;
-                            infoObject.catagory = channelCatagories;
-
-                            // getting tags
-                            let channelTags = Array.from(document.querySelector('div.category-tags-holder').children).map(x => x.textContent);
-                            channelTags.splice(0,1);
-                            infoObject.tags = channelTags;
-
-                            // getting title
-                            let streamTitle = document.querySelector('.stream-title').textContent;
-                            infoObject.streamTitle = streamTitle;
-
-                            // getting viewers
-                            let viewerArray = Array.from(document.querySelectorAll('.odometer-digit-inner')).map(x => x.textContent);
-                            let viewers = parseInt(viewerArray.join(''));
-                            infoObject.viewers = viewers;
-                        }
-
-                        return infoObject;
-                    })
-                    return channelStats;
+                let infoObject = {
+                    name: extractedText.slug,
+                    displayName: extractedText.user.username,
+                    profileImageURL: extractedText.user.profile_pic,
+                    streamURL: `https://kick.com/${channelName}`,
+                    verified: extractedText.verified,
+                    followers: extractedText.followers_count,
+                    live: extractedText.livestream != null,
+                    viewers: extractedText.livestream != null ? extractedText.livestream.view_count : 0,
+                    streamTitle: extractedText.livestream != null ? extractedText.livestream.session_title : '',
+                    catagory: extractedText.livestream != null ? extractedText.livestream.categories[0].name : '',
+                    tags: extractedText.livestream != null ? extractedText.livestream.tags : [],
                 }
-                return false
+
+                return infoObject;
             }
 
             let newInfoArray = [];
             for (let i = 0; i < channels.length; i++) {
                 let newInfoObject = await getStats(channels[i], i)
-                if (newInfoObject != false) {
-                    newInfoObject.name = channels[i];
-                    newInfoObject.streamURL = `https://kick.com/${channels[i]}`;
-                    newInfoArray.push(newInfoObject);
-                }
+                if (newInfoObject) newInfoArray.push(newInfoObject);   
             }
             
             await browser.close()
@@ -107,3 +54,5 @@ export const handler = async(event) => {
     };
     return response;
 }
+
+console.log(await handler({"body": ["xqc", "destiny"]}));

@@ -8,10 +8,8 @@
   },
   "author": "",
   "license": "ISC",
+  "type": "module",
   "dependencies": {
-    "puppeteer": "^21.2.1",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
-  },
-  "type": "module"
+    "puppeteer": "^20.9.0"
+  }
 }

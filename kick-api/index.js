@@ -54,5 +54,3 @@ export const handler = async(event) => {
     };
     return response;
 }
-
-console.log(await handler({"body": ["xqc", "destiny"]}));

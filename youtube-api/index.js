@@ -18,11 +18,13 @@ function parseViewers(viewerString) {
 }
 
 async function getInfo(channelName) {
-
     // getting the "html" to parse thru and formatting it a bit
     let response = await fetch(`https://youtube.com/@${channelName}`);
     let html = await response.text();
     let prettied = pretty(html); 
+
+    // if invalid channel
+    if (prettied.match(/<title>404 Not Found<\/title>/)) return false;
 
     // defining the channel info object
     let infoObject = {
@@ -58,9 +60,11 @@ async function getInfo(channelName) {
         let matchedViewers = prettied.match(/"viewCountText"\s*:\s*{\s*"runs"\s*:\s*\[\s*{\s*"text"\s*:\s*"([^"]+)"/);
         infoObject.viewers = parseViewers(matchedViewers[1]);
 
+        // getting and setting stream title
         let matchedTitle = prettied.match(/"title"\s*:\s*{\s*"runs"\s*:\s*\[\s*{\s*"text"\s*:\s*"([^"]+)"/);
         infoObject.streamTitle = matchedTitle[1];
 
+        // getting and setting stream url
         let matchedURL = prettied.match(/"videoId"\s*:\s*"([^"]+)"/)
         infoObject.streamURL = `https://www.youtube.com/watch?v=${matchedURL[1]}`;
     };
@@ -74,7 +78,7 @@ function youtubeChannelInfo(channels) {
             let newDataArray = [];
             for (let i = 0; i < channels.length; i++) {
                 let newInfoObject = await getInfo(channels[i]);
-                newDataArray.push(newInfoObject);
+                if (newInfoObject != false) newDataArray.push(newInfoObject);
             }
 
             resolve(newDataArray);

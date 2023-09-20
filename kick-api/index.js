@@ -1,19 +1,25 @@
-import puppeteer from "puppeteer-core";
+import puppeteerExtra from "puppeteer-extra";
+import stealthPlugin from "puppeteer-extra-plugin-stealth";
 import chromium from "@sparticuz/chromium";
 
 export function kickChannelInfo(channels) {
     return new Promise(async (resolve, reject) => {
         try {
+            puppeteerExtra.use(stealthPlugin());
             
-            const browser = await puppeteer.launch({
+            // for lambda
+            const browser = await puppeteerExtra.launch({
                 args: chromium.args,
                 defaultViewport: chromium.defaultViewport,
                 executablePath: await chromium.executablePath(),
                 headless: chromium.headless,
+                ignoreHTTPSErrors: true,
             });
+            
 
+            // for local
             /*
-            const browser = await puppeteer.launch({
+            const browser = await puppeteerExtra.launch({
                 headless: "new",
                 executablePath: "/Program Files/Google/Chrome/Application/chrome.exe"
             });
@@ -27,9 +33,13 @@ export function kickChannelInfo(channels) {
                 // checks if channel exists
                 let extractedText = await page.$eval('*', (el) => el.innerText);
 
-                /*
                 if (extractedText.length == 13) return false;
-                extractedText = JSON.parse(extractedText)
+                try {
+                    extractedText = JSON.parse(extractedText)
+                } catch(err) {
+                    return false;
+                }
+                
 
                 let infoObject = {
                     name: extractedText.slug,
@@ -44,9 +54,7 @@ export function kickChannelInfo(channels) {
                     catagory: extractedText.livestream != null ? extractedText.livestream.categories[0].name : '',
                     tags: extractedText.livestream != null ? extractedText.livestream.tags : [],
                 }
-                */
 
-                let infoObject = {text: extractedText};
                 return infoObject;
             }
 
@@ -55,6 +63,9 @@ export function kickChannelInfo(channels) {
                 let newInfoObject = await getStats(channels[i], i)
                 if (newInfoObject) newInfoArray.push(newInfoObject);   
             }
+
+            const pages = await browser.pages();
+            await Promise.all(pages.map(async (page) => page.close()));
             
             await browser.close()
             resolve(newInfoArray);
@@ -74,4 +85,5 @@ export const handler = async(event) => {
     return response;
 }
 
-console.log(await handler({"body": ["xqc", "destiny"]}));
+// for local
+//console.log(await handler({"body": ["xqc"]}));

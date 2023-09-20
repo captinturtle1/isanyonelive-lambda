@@ -1,16 +1,33 @@
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 
 export function kickChannelInfo(channels) {
     return new Promise(async (resolve, reject) => {
         try {
-            const browser = await puppeteer.launch({headless: "new"});
+            
+            const browser = await puppeteer.launch({
+                args: chromium.args,
+                defaultViewport: chromium.defaultViewport,
+                executablePath: await chromium.executablePath(),
+                headless: chromium.headless,
+            });
+
+            /*
+            const browser = await puppeteer.launch({
+                headless: "new",
+                executablePath: "/Program Files/Google/Chrome/Application/chrome.exe"
+            });
+            */
+
             const page = await browser.newPage() 
             
-            async function getStats(channelName, index) {
+            async function getStats(channelName) {
                 await page.goto(`https://kick.com/api/v2/channels/${channelName}`);
 
                 // checks if channel exists
                 let extractedText = await page.$eval('*', (el) => el.innerText);
+
+                /*
                 if (extractedText.length == 13) return false;
                 extractedText = JSON.parse(extractedText)
 
@@ -22,12 +39,14 @@ export function kickChannelInfo(channels) {
                     verified: extractedText.verified,
                     followers: extractedText.followers_count,
                     live: extractedText.livestream != null,
-                    viewers: extractedText.livestream != null ? extractedText.livestream.view_count : 0,
+                    viewers: extractedText.livestream != null ? extractedText.livestream.viewer_count : 0,
                     streamTitle: extractedText.livestream != null ? extractedText.livestream.session_title : '',
                     catagory: extractedText.livestream != null ? extractedText.livestream.categories[0].name : '',
                     tags: extractedText.livestream != null ? extractedText.livestream.tags : [],
                 }
+                */
 
+                let infoObject = {text: extractedText};
                 return infoObject;
             }
 
@@ -54,3 +73,5 @@ export const handler = async(event) => {
     };
     return response;
 }
+
+console.log(await handler({"body": ["xqc", "destiny"]}));

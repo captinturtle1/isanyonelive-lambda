@@ -35,7 +35,8 @@ async function getInfo(channelName) {
         verified: false,
         live: false,
         viewers: 0,
-        streamTitle: ''
+        streamTitle: '',
+        streamThumbnail: '',
     }
 
     // setting if the channel is verified
@@ -61,12 +62,29 @@ async function getInfo(channelName) {
         infoObject.viewers = parseViewers(matchedViewers[1]);
 
         // getting and setting stream title
-        let matchedTitle = prettied.match(/"title"\s*:\s*{\s*"runs"\s*:\s*\[\s*{\s*"text"\s*:\s*"([^"]+)"/);
-        infoObject.streamTitle = matchedTitle[1];
+
+        // gets all titles
+        let matchedTitles = prettied.match(/"title"\s*:\s*{\s*"runs"\s*:\s*\[\s*{\s*"text"\s*:\s*"([^"]+)"/g);
+        let textArray = [];
+        for (let i = 0; i < matchedTitles.length; i++) {
+            let textValue = matchedTitles[i].match(/"text":\s+"([^"]+)"/);
+            textArray.push(textValue[1]);
+        }
+        if (textArray[0].length == 1 && !isNaN(textArray[0])) {
+            // if channel has multiple streams
+            infoObject.streamTitle = textArray[1];
+        } else {
+            // if channel has one stream
+            infoObject.streamTitle = textArray[0];
+        }
 
         // getting and setting stream url
         let matchedURL = prettied.match(/"videoId"\s*:\s*"([^"]+)"/)
         infoObject.streamURL = `https://www.youtube.com/watch?v=${matchedURL[1]}`;
+
+        // getting and setting thumbnail url
+        let matchedThumbURL = prettied.match(/"thumbnail":\s*{\s*"thumbnails":\s*\[\s*{\s*"url":\s*"([^"]+)"/);
+        infoObject.streamThumbnail = matchedThumbURL[1];
     };
 
     return infoObject;
@@ -80,7 +98,6 @@ function youtubeChannelInfo(channels) {
                 let newInfoObject = await getInfo(channels[i]);
                 if (newInfoObject != false) newDataArray.push(newInfoObject);
             }
-
             resolve(newDataArray);
         } catch(err) {
             reject(err)
@@ -89,10 +106,25 @@ function youtubeChannelInfo(channels) {
 }
 
 export const handler = async(event) => {
-    let data = await youtubeChannelInfo(event.body);
-    const response = {
-        statusCode: 200,
-        body: data
-    };
-    return response;
+    let isValid = true;
+    for (let i = 0; i < event.body.length; i++) {
+        if (isValid) {
+            isValid = (event.body[i]).match(/^[a-zA-Z0-9_]+$/i);
+        }
+    }
+
+    if (isValid) {
+        let data = await youtubeChannelInfo(event.body);
+        const response = {
+            statusCode: 200,
+            body: data
+        };
+        return response;
+    } else {
+        const response = {
+            statusCode: 400,
+            body: []
+        };
+        return response;
+    }
 }

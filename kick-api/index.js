@@ -15,7 +15,6 @@ export function kickChannelInfo(channels) {
                 headless: chromium.headless,
                 ignoreHTTPSErrors: true,
             });
-            
 
             // for local
             /*
@@ -53,6 +52,7 @@ export function kickChannelInfo(channels) {
                     streamTitle: extractedText.livestream != null ? extractedText.livestream.session_title : '',
                     catagory: extractedText.livestream != null ? extractedText.livestream.categories[0].name : '',
                     tags: extractedText.livestream != null ? extractedText.livestream.tags : [],
+                    streamThumbnail: extractedText.livestream != null ? extractedText.livestream.thumbnail.url : '',
                 }
 
                 return infoObject;

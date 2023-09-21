@@ -143,10 +143,25 @@ function twitchChannelInfo(channels) {
 }
 
 export const handler = async(event) => {
-    let data = await twitchChannelInfo(event.body);
-    const response = {
-        statusCode: 200,
-        body: data
-    };
-    return response;
+    let isValid = true;
+    for (let i = 0; i < event.body.length; i++) {
+        if (isValid) {
+            isValid = (event.body[i]).match(/^[a-zA-Z0-9_]+$/i);
+        }
+    }
+
+    if (isValid) {
+        let data = await twitchChannelInfo(event.body);
+        const response = {
+            statusCode: 200,
+            body: data
+        };
+        return response;
+    } else {
+        const response = {
+            statusCode: 400,
+            body: []
+        };
+        return response;
+    }
 }

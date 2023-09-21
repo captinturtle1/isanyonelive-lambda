@@ -117,6 +117,7 @@ function twitchChannelInfo(channels) {
                         streamTitle: '',
                         catagory: '',
                         tags: [],
+                        streamThumbnail: '',
                     }
 
                     // loop thru stream endpoint responses to find matching name for current users endpoint
@@ -127,6 +128,7 @@ function twitchChannelInfo(channels) {
                             infoObject.streamTitle = response[j].title;
                             infoObject.catagory = response[j].game_name;
                             infoObject.tags = response[j].tags;
+                            infoObject.streamThumbnail = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${usersResponse[i].login}.jpg`
                         }
                     }
                     newDataArray.push(infoObject);

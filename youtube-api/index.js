@@ -79,12 +79,11 @@ async function getInfo(channelName) {
         }
 
         // getting and setting stream url
-        let matchedURL = prettied.match(/"videoId"\s*:\s*"([^"]+)"/)
-        infoObject.streamURL = `https://www.youtube.com/watch?v=${matchedURL[1]}`;
+        let matchedId = prettied.match(/"videoId"\s*:\s*"([^"]+)"/)
+        infoObject.streamURL = `https://www.youtube.com/watch?v=${matchedId[1]}`;
 
-        // getting and setting thumbnail url
-        let matchedThumbURL = prettied.match(/"thumbnail":\s*{\s*"thumbnails":\s*\[\s*{\s*"url":\s*"([^"]+)"/);
-        infoObject.streamThumbnail = matchedThumbURL[1];
+        // setting thumbnail url using video id
+        infoObject.streamThumbnail = `https://img.youtube.com/vi/${matchedId[1]}/maxresdefault.jpg`;
     };
 
     return infoObject;

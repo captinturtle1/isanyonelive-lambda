@@ -8,6 +8,7 @@ export function kickChannelInfo(channels) {
             puppeteerExtra.use(stealthPlugin());
             
             // for lambda
+            
             const browser = await puppeteerExtra.launch({
                 args: chromium.args,
                 defaultViewport: chromium.defaultViewport,
@@ -15,6 +16,7 @@ export function kickChannelInfo(channels) {
                 headless: chromium.headless,
                 ignoreHTTPSErrors: true,
             });
+            
 
             // for local
             /*
@@ -27,7 +29,7 @@ export function kickChannelInfo(channels) {
             const page = await browser.newPage() 
             
             async function getStats(channelName) {
-                await page.goto(`https://kick.com/api/v2/channels/${channelName}`);
+                await page.goto(`https://kick.com/api/v1/channels/${channelName}`);
 
                 // checks if channel exists
                 let extractedText = await page.$eval('*', (el) => el.innerText);
@@ -39,20 +41,20 @@ export function kickChannelInfo(channels) {
                     return false;
                 }
                 
-
                 let infoObject = {
                     name: extractedText.slug,
                     displayName: extractedText.user.username,
                     profileImageURL: extractedText.user.profile_pic,
                     streamURL: `https://kick.com/${channelName}`,
-                    verified: extractedText.verified,
-                    followers: extractedText.followers_count,
+                    verified: extractedText.verified != null,
+                    followers: extractedText.followersCount,
                     live: extractedText.livestream != null,
                     viewers: extractedText.livestream != null ? extractedText.livestream.viewer_count : 0,
                     streamTitle: extractedText.livestream != null ? extractedText.livestream.session_title : '',
                     catagory: extractedText.livestream != null ? extractedText.livestream.categories[0].name : '',
                     tags: extractedText.livestream != null ? extractedText.livestream.tags : [],
                     streamThumbnail: extractedText.livestream != null ? extractedText.livestream.thumbnail.url : '',
+                    streamStartTime: extractedText.livestream != null ? new Date(extractedText.livestream.start_time + 'z').getTime()/1000 : 0,
                 }
 
                 return infoObject;
